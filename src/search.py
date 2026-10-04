@@ -78,10 +78,149 @@ def bfs(problem: WeightedGrid) -> SearchResult:
         peak_stored_states=peak_stored,
     )
 
-def dfs(problem: WeightedGrid) -> SearchResult:
-    """Busca em Profundidade. Implemente conforme a especificação do trabalho."""
-    raise NotImplementedError("Implemente DFS.")
+import math
+from collections import deque
+from collections.abc import Callable
+import heapq
 
+from .models import SearchResult
+from .problem import WeightedGrid
+
+Heuristic = Callable[[tuple[int, int], tuple[int, int]], float]
+
+
+def bfs(problem: WeightedGrid) -> SearchResult:
+    inicio = problem.start
+    fila = deque([inicio])
+    descobertos = {inicio}
+    parent = {}
+
+    generated = 1
+    expanded = 0
+    peak_frontier = 1
+    peak_stored = 1
+
+    while fila:
+        atual = fila.popleft()
+
+        if problem.goal_test(atual):
+            no = atual
+            path = [no]
+            actions = []
+
+            while no != inicio:
+                pai, acao = parent[no]
+                actions.append(acao)
+                path.append(pai)
+                no = pai
+
+            path.reverse()
+            actions.reverse()
+            cost = sum(problem.step_cost(p) for p in path[1:])
+
+            return SearchResult(
+                found=True,
+                algorithm="bfs",
+                path=path,
+                actions=actions,
+                cost=cost,
+                generated=generated,
+                expanded=expanded,
+                peak_frontier=peak_frontier,
+                peak_stored_states=peak_stored,
+            )
+
+        expanded += 1
+        for acao, destino, custo in problem.successors(atual):
+            if destino not in descobertos:
+                descobertos.add(destino)
+                parent[destino] = (atual, acao)
+                fila.append(destino)
+                generated += 1
+
+        peak_frontier = max(peak_frontier, len(fila))
+        peak_stored = max(peak_stored, len(descobertos))
+
+    return SearchResult(
+        found=False,
+        algorithm="bfs",
+        path=[],
+        actions=[],
+        cost=float("inf"),
+        generated=generated,
+        expanded=expanded,
+        peak_frontier=peak_frontier,
+        peak_stored_states=peak_stored,
+    )
+
+
+def dfs(problem: WeightedGrid) -> SearchResult:
+    """Busca em Profundidade (DFS)."""
+    inicio = problem.start
+    pilha = [inicio]            # Usa lista como pilha LIFO
+    descobertos = {inicio}      # Marcado ao inserir na fronteira
+    parent = {}
+
+    generated = 1
+    expanded = 0
+    peak_frontier = 1
+    peak_stored = 1
+
+    while pilha:
+        atual = pilha.pop()
+
+        if problem.goal_test(atual):
+            no = atual
+            path = [no]
+            actions = []
+
+            while no != inicio:
+                pai, acao = parent[no]
+                actions.append(acao)
+                path.append(pai)
+                no = pai
+
+            path.reverse()
+            actions.reverse()
+            cost = sum(problem.step_cost(p) for p in path[1:])
+
+            return SearchResult(
+                found=True,
+                algorithm="dfs",
+                path=path,
+                actions=actions,
+                cost=cost,
+                generated=generated,
+                expanded=expanded,
+                peak_frontier=peak_frontier,
+                peak_stored_states=peak_stored,
+            )
+
+        expanded += 1
+
+        # Reverte a lista de sucessores para que o primeiro sucessor (ex: Norte)
+        # fique no topo da pilha e seja removido/expandido primeiro
+        for acao, destino, custo in reversed(list(problem.successors(atual))):
+            if destino not in descobertos:
+                descobertos.add(destino)
+                parent[destino] = (atual, acao)
+                pilha.append(destino)
+                generated += 1
+
+        peak_frontier = max(peak_frontier, len(pilha))
+        peak_stored = max(peak_stored, len(descobertos))
+
+    return SearchResult(
+        found=False,
+        algorithm="dfs",
+        path=[],
+        actions=[],
+        cost=float("inf"),
+        generated=generated,
+        expanded=expanded,
+        peak_frontier=peak_frontier,
+        peak_stored_states=peak_stored,
+    )
 
 def uniform_cost(problem: WeightedGrid) -> SearchResult:
     """Busca de Custo Uniforme. Implemente conforme a especificação do trabalho."""
