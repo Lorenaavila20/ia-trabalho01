@@ -1,4 +1,4 @@
-import math
+import heapq
 from collections import deque
 from collections.abc import Callable
 
@@ -77,16 +77,6 @@ def bfs(problem: WeightedGrid) -> SearchResult:
         peak_frontier=peak_frontier,
         peak_stored_states=peak_stored,
     )
-
-import math
-from collections import deque
-from collections.abc import Callable
-import heapq
-
-from .models import SearchResult
-from .problem import WeightedGrid
-
-Heuristic = Callable[[tuple[int, int], tuple[int, int]], float]
 
 
 def bfs(problem: WeightedGrid) -> SearchResult:
@@ -223,8 +213,87 @@ def dfs(problem: WeightedGrid) -> SearchResult:
     )
 
 def uniform_cost(problem: WeightedGrid) -> SearchResult:
-    """Busca de Custo Uniforme. Implemente conforme a especificação do trabalho."""
-    raise NotImplementedError("Implemente UCS.")
+    """Busca de Custo Uniforme (UCS / Dijkstra)."""
+    inicio = problem.start
+    counter = 0
+
+    # Fila de prioridade: (custo, contador_desempate, estado)
+    frontier = [(0, counter, inicio)]
+    na_fronteira = {inicio}  # Conjunto para rastrear estados distintos na fronteira
+    parent = {}
+    cost_so_far = {inicio: 0}
+
+    generated = 1
+    expanded = 0
+    peak_frontier = 1
+    peak_stored = 1
+
+    while frontier:
+        current_cost, _, atual = heapq.heappop(frontier)
+
+        # 3. Descarte de entradas obsoletas ANTES do teste de objetivo
+        if current_cost > cost_so_far[atual]:
+            continue
+
+        # Remove o estado válido da fronteira ao ser retirado para expansão
+        na_fronteira.discard(atual)
+
+        if problem.goal_test(atual):
+            no = atual
+            path = [no]
+            actions = []
+            while no != inicio:
+                pai, acao = parent[no]
+                actions.append(acao)
+                path.append(pai)
+                no = pai
+
+            path.reverse()
+            actions.reverse()
+
+            return SearchResult(
+                found=True,
+                algorithm="ucs",
+                path=path,
+                actions=actions,
+                cost=current_cost,
+                generated=generated,
+                expanded=expanded,
+                peak_frontier=peak_frontier,
+                peak_stored_states=peak_stored,
+            )
+
+        expanded += 1
+
+        for acao, destino, custo_passo in problem.successors(atual):
+            novo_custo = current_cost + custo_passo
+            if destino not in cost_so_far or novo_custo < cost_so_far[destino]:
+                cost_so_far[destino] = novo_custo
+                parent[destino] = (atual, acao)
+                counter += 1
+                heapq.heappush(frontier, (novo_custo, counter, destino))
+
+                # 1. Contagem de geração a cada inserção (inclusive reinserções)
+                generated += 1
+
+                # 2. Rastreamento do estado na fronteira
+                na_fronteira.add(destino)
+
+        # Atualização dos picos usando o conjunto de estados distintos
+        peak_frontier = max(peak_frontier, len(na_fronteira))
+        peak_stored = max(peak_stored, len(cost_so_far))
+
+    return SearchResult(
+        found=False,
+        algorithm="ucs",
+        path=[],
+        actions=[],
+        cost=float("inf"),
+        generated=generated,
+        expanded=expanded,
+        peak_frontier=peak_frontier,
+        peak_stored_states=peak_stored,
+    )
 
 
 def greedy(problem: WeightedGrid, heuristic: Heuristic) -> SearchResult:
