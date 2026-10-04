@@ -4,7 +4,7 @@
 
 - **Aluno(a) 1:** Lorena Ávila
 - **Aluno(a) 2:** Não se aplica
-- **Repositório Git:** <link do repositório>
+- **Repositório Git:**  https://github.com/Lorenaavila20/ia-trabalho01
 - **Tag:** `entrega-parte1`
 
 Esta entrega contém a **Parte 1** (busca não informada e informada). A Parte 2 (Hill Climbing nas 8 Rainhas) será entregue em 15/10/2026.
