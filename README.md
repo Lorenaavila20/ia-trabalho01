@@ -3,7 +3,7 @@
 ## Identificação da entrega
 
 - **Aluno(a) 1:** Lorena Ávila
-- **Aluno(a) 2:** <nome ou não se aplica>
+- **Aluno(a) 2:** Não se aplica
 - **Repositório Git:** <link do repositório>
 - **Tag:** `entrega-parte1`
 
