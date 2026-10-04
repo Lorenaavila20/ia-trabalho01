@@ -295,12 +295,161 @@ def uniform_cost(problem: WeightedGrid) -> SearchResult:
         peak_stored_states=peak_stored,
     )
 
-
 def greedy(problem: WeightedGrid, heuristic: Heuristic) -> SearchResult:
-    """Busca Gulosa pelo melhor primeiro."""
-    raise NotImplementedError("Implemente Busca Gulosa.")
+    """Busca Gulosa pelo melhor primeiro (Greedy Best-First Search)."""
+    inicio = problem.start
+    goal = problem.goal
+    counter = 0
 
+    h_init = heuristic(inicio, goal)
+    # Fila de prioridade baseada apenas no valor da heurística h(n)
+    frontier = [(h_init, counter, inicio)]
+    descobertos = {inicio}
+    parent = {}
+
+    generated = 1
+    expanded = 0
+    peak_frontier = 1
+    peak_stored = 1
+
+    while frontier:
+        _, _, atual = heapq.heappop(frontier)
+
+        if problem.goal_test(atual):
+            no = atual
+            path = [no]
+            actions = []
+            while no != inicio:
+                pai, acao = parent[no]
+                actions.append(acao)
+                path.append(pai)
+                no = pai
+
+            path.reverse()
+            actions.reverse()
+            cost = sum(problem.step_cost(p) for p in path[1:])
+
+            return SearchResult(
+                found=True,
+                algorithm="greedy",
+                path=path,
+                actions=actions,
+                cost=cost,
+                generated=generated,
+                expanded=expanded,
+                peak_frontier=peak_frontier,
+                peak_stored_states=peak_stored,
+            )
+
+        expanded += 1
+
+        for acao, destino, _ in problem.successors(atual):
+            if destino not in descobertos:
+                descobertos.add(destino)
+                parent[destino] = (atual, acao)
+                counter += 1
+                h_val = heuristic(destino, goal)
+                heapq.heappush(frontier, (h_val, counter, destino))
+                generated += 1
+
+        peak_frontier = max(peak_frontier, len(frontier))
+        peak_stored = max(peak_stored, len(descobertos))
+
+    return SearchResult(
+        found=False,
+        algorithm="greedy",
+        path=[],
+        actions=[],
+        cost=float("inf"),
+        generated=generated,
+        expanded=expanded,
+        peak_frontier=peak_frontier,
+        peak_stored_states=peak_stored,
+    )
 
 def astar(problem: WeightedGrid, heuristic: Heuristic) -> SearchResult:
-    """Busca A*."""
-    raise NotImplementedError("Implemente A*.")
+    """Busca A* (A-Star)."""
+    inicio = problem.start
+    goal = problem.goal
+    counter = 0
+
+    g_score = {inicio: 0}
+    h_init = heuristic(inicio, goal)
+    f_init = h_init
+
+    # Fila de prioridade: (f, h, contador_desempate, g, estado)
+    frontier = [(f_init, h_init, counter, 0, inicio)]
+    na_fronteira = {inicio}
+    parent = {}
+
+    generated = 1
+    expanded = 0
+    peak_frontier = 1
+    peak_stored = 1
+
+    while frontier:
+        _, _, _, current_g, atual = heapq.heappop(frontier)
+
+        # Descarte de entradas obsoletas ANTES do teste de objetivo
+        if current_g > g_score[atual]:
+            continue
+
+        na_fronteira.discard(atual)
+
+        if problem.goal_test(atual):
+            no = atual
+            path = [no]
+            actions = []
+            while no != inicio:
+                pai, acao = parent[no]
+                actions.append(acao)
+                path.append(pai)
+                no = pai
+
+            path.reverse()
+            actions.reverse()
+
+            return SearchResult(
+                found=True,
+                algorithm="astar",
+                path=path,
+                actions=actions,
+                cost=g_score[atual],
+                generated=generated,
+                expanded=expanded,
+                peak_frontier=peak_frontier,
+                peak_stored_states=peak_stored,
+            )
+
+        expanded += 1
+
+        for acao, destino, custo_passo in problem.successors(atual):
+            tentative_g = current_g + custo_passo
+            if destino not in g_score or tentative_g < g_score[destino]:
+                g_score[destino] = tentative_g
+                parent[destino] = (atual, acao)
+                counter += 1
+                
+                h_dest = heuristic(destino, goal)
+                f_score = tentative_g + h_dest
+                
+                # Tupla ajustada com h_dest como segundo critério de desempate
+                heapq.heappush(frontier, (f_score, h_dest, counter, tentative_g, destino))
+
+                generated += 1
+                na_fronteira.add(destino)
+
+        peak_frontier = max(peak_frontier, len(na_fronteira))
+        peak_stored = max(peak_stored, len(g_score))
+
+    return SearchResult(
+        found=False,
+        algorithm="astar",
+        path=[],
+        actions=[],
+        cost=float("inf"),
+        generated=generated,
+        expanded=expanded,
+        peak_frontier=peak_frontier,
+        peak_stored_states=peak_stored,
+    )
