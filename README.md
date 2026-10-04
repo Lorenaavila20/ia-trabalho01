@@ -1,150 +1,92 @@
-# EC IA - Trabalho 01 - 2026/2
-
-Material público do Trabalho 01 da disciplina de Inteligência Artificial.
-
-## Informações principais
-
-- **Valor:** 20,0 pontos.
-- **Modalidade:** individual ou em dupla.
-- **Linguagem:** Python.
-- **Parte 1 - Busca não informada e informada:** entrega em **08/10/2026**.
-- **Parte 2 - Busca local e entrega final:** entrega em **15/10/2026**.
-
-Leia primeiro o arquivo **`EC_IA_Trabalho_01_2026.pdf`**. O enunciado prevalece sobre qualquer resumo apresentado neste README.
+# Trabalho 01 - Inteligência Artificial (CEFET-MG, 2026/2)
 
 ## Identificação da entrega
 
-Preencha estes dados antes de cada submissão:
+- **Aluno(a) 1:** Lorena Ávila
+- **Aluno(a) 2:** <nome ou não se aplica>
+- **Repositório Git:** <link do repositório>
+- **Tag:** `entrega-parte1`
 
-- **Aluno(a) 1:** `<nome>`
-- **Aluno(a) 2:** `<nome ou não se aplica>`
-- **Repositório Git:** `<link do repositório>`
-- **Tag:** `entrega-parte1` ou `entrega-final`
+Esta entrega contém a **Parte 1** (busca não informada e informada). A Parte 2 (Hill Climbing nas 8 Rainhas) será entregue em 15/10/2026.
 
-
-
-## Entrega no SIGAA e repositório Git
-
-O desenvolvimento deve ser mantido em um repositório Git acessível ao professor. O repositório deve permanecer **privado até o encerramento da correção**, com acesso concedido ao professor.
-
-### 08/10/2026 - Parte 1
-
-No SIGAA, envie um arquivo `.zip` com a versão executável da Parte 1. Antes da entrega, crie no repositório a tag:
+## Instalação e execução
 
 ```bash
-git tag entrega-parte1
-git push origin entrega-parte1
-```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 
-O `README.md` da entrega deve informar o endereço do repositório e a tag `entrega-parte1`. Não é necessário entregar o relatório final nesta etapa.
-
-### 15/10/2026 - Entrega final
-
-No SIGAA, envie:
-
-- o relatório final em PDF;
-- um arquivo `.zip` com o projeto completo.
-
-Antes da entrega, crie no repositório a tag:
-
-```bash
-git tag entrega-final
-git push origin entrega-final
-```
-
-O `README.md` e o relatório final devem informar o endereço do repositório e a tag `entrega-final`. A versão avaliada será a versão marcada por essa tag. Commits posteriores não substituem a versão entregue.
-
-O histórico de commits poderá ser utilizado como elemento auxiliar na verificação da autoria e da contribuição dos integrantes, sem exigência de quantidade mínima de commits.
-
-## Conteúdo deste pacote
-
-```text
-.
-├── EC_IA_Trabalho_01_2026.pdf   # enunciado oficial
-├── README.md                     # orientações gerais
-├── IA_USAGE.md                   # registro do uso de IA
-├── instrucoes_relatorio.md       # orientações para o relatório
-├── .gitignore
-├── requirements.txt
-├── data/
-│   └── mapa_teste.txt
-├── src/
-│   ├── __init__.py
-│   ├── problem.py
-│   ├── models.py
-│   ├── heuristics.py
-│   ├── search.py
-│   ├── eight_queens.py
-│   ├── hill_climbing.py
-│   └── main.py
-├── scripts/
-│   └── run_experiments.py
-├── tests/
-│   └── test_problem.py
-└── modelo_relatorio/
-    ├── relatorio_sbc.tex
-    └── sbc-template.sty
-```
-
-O fonte LaTeX do enunciado e os arquivos institucionais utilizados para sua composição não fazem parte do material de trabalho dos alunos.
-
-## Parte 1 - Busca não informada e informada
-
-Devem ser implementados:
-
-- Busca em Largura - BFS;
-- Busca em Profundidade - DFS;
-- Busca de Custo Uniforme - UCS;
-- Busca Gulosa;
-- A*;
-- heurísticas Manhattan e Euclidiana.
-
-O mapa público está em `data/mapa_teste.txt`. O programa também será avaliado com mapas não disponibilizados previamente.
-
-Exemplo de execução após a implementação:
-
-```bash
+# uma busca (algoritmos: bfs, dfs, ucs, greedy, astar; heurísticas: manhattan, euclidean)
 python -m src.main busca --map data/mapa_teste.txt --algorithm astar --heuristic manhattan
-```
 
-## Parte 2 - Busca local
+# tabela de resultados (mediana de 30 execuções)
+python -m scripts.run_experiments
 
-Devem ser implementados para o problema das 8 Rainhas:
-
-- Hill Climbing;
-- Random-Restart Hill Climbing.
-
-Exemplos:
-
-```bash
-python -m src.main rainhas --algorithm hill --seed 42
-python -m src.main rainhas --algorithm restart --seed 42 --max-restarts 50
-```
-
-## Teste inicial do código-base
-
-Antes de implementar os algoritmos, execute:
-
-```bash
+# testes
 python -m unittest discover -s tests -v
 ```
 
-Os testes fornecidos verificam apenas a infraestrutura inicial. A equipe deve adicionar os casos de teste exigidos no enunciado.
+## Organização
 
-## Experimentos
+- `src/problem.py`: leitura do mapa, sucessores (N, L, S, O) e custos.
+- `src/search.py`: BFS, DFS, UCS, Gulosa e A*.
+- `src/heuristics.py`: distâncias Manhattan e Euclidiana.
+- `src/models.py`: `SearchResult` com as métricas.
+- `tests/`: testes do problema e das buscas (início adjacente ao objetivo, mapa sem solução, ciclos, rotas com o mesmo número de ações, rota curta e cara × longa e barata).
+- `scripts/run_experiments.py`: gera a tabela da Parte 1.
 
-O arquivo `scripts/run_experiments.py` é um esqueleto para a execução padronizada dos experimentos utilizados no relatório. Ele deve ser completado pela equipe.
+## Decisões de implementação
 
-## Relatório
+- **Descoberto na inserção (BFS e DFS):** o estado é marcado ao entrar na fronteira.
+- **Teste de objetivo ao retirar da fronteira**, em todos os algoritmos. O objetivo não conta como expandido.
+- **DFS:** os sucessores entram na pilha em ordem inversa, para que o Norte seja expandido primeiro.
+- **UCS e A\*:** prioridade `(g, ordem)` e `(f, h, ordem)`. Reinserção por melhora de custo conta como nova geração, e entradas obsoletas do heap são ignoradas, sem contar como expansão.
+- **Gulosa:** prioridade `(h, ordem)`; cada estado entra uma única vez.
+- **Pico de memória:** máximo de estados distintos em fronteira ∪ explorados.
+- **Heurísticas:** o menor custo de passo é 1 e os movimentos são em 4 direções, então Manhattan e Euclidiana nunca superestimam o custo restante.
 
-Consulte `instrucoes_relatorio.md` e a pasta `modelo_relatorio/`.
+## Resultados no mapa público (`data/mapa_teste.txt`)
 
-O relatório deve usar o modelo SBC fornecido, sem capa separada, respeitando o limite e os requisitos definidos no enunciado.
+| Alg. | Heur. | Passos | Custo | Ger. | Exp. | Pico F. | Pico Mem. | Tempo (ms) |
+|---|---|---|---|---|---|---|---|---|
+| BFS | - | 15 | 40 | 66 | 59 | 9 | 66 | 0.088 |
+| DFS | - | 15 | 40 | 21 | 15 | 6 | 21 | 0.027 |
+| UCS | - | 29 | 29 | 77 | 74 | 6 | 77 | 0.140 |
+| Gulosa | Manhattan | 15 | 40 | 21 | 15 | 6 | 21 | 0.030 |
+| A* | Manhattan | 29 | 29 | 60 | 43 | 15 | 58 | 0.094 |
+| Gulosa | Euclidiana | 15 | 40 | 21 | 15 | 6 | 21 | 0.031 |
+| A* | Euclidiana | 29 | 29 | 72 | 60 | 12 | 72 | 0.133 |
 
-## Uso de Inteligência Artificial
+O tempo é a mediana de 30 execuções, sem contar a leitura do arquivo, e varia entre máquinas e rodadas.
 
-Todo uso de ferramentas de IA deve obedecer à política descrita no enunciado e ser registrado em `IA_USAGE.md`.
+## Caminhos no mapa público
 
-## Observação importante
+BFS (15 passos, custo 40; DFS e Gulosa produzem o mesmo caminho):
 
-As funções correspondentes aos algoritmos e às heurísticas estão deliberadamente incompletas. O código fornecido é apenas a infraestrutura inicial do trabalho e não contém o gabarito das implementações.
+```
+S**************G
+.#.#####.####...
+.#.....#....#...
+.#####.#.##.#...
+.....#.#....#...
+####.#.######...
+.....#...R.R....
+................
+```
+
+UCS (29 passos, custo 29):
+
+```
+S**MMMMM.....**G
+.#*#####.####*..
+.#*****#....#*..
+.#####*#.##.#*..
+.....#*#....#*..
+####.#*######*..
+.....#***R.R**..
+........*****...
+```
+
+## Uso de IA
+
+Registrado em `IA_USAGE.md`.

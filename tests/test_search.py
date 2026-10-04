@@ -182,6 +182,14 @@ class TestMapaPublico(SearchTestCase):
                 self.assertEqual(self.results[name].generated, again[name].generated)
                 self.assertEqual(self.results[name].expanded, again[name].expanded)
 
-
+class TestDfsNaoOtima(SearchTestCase):
+    def test_dfs_longer_than_bfs(self):
+        problem = make_grid("S...\n....\nG...")
+        r_bfs, r_dfs = bfs(problem), dfs(problem)
+        self.assert_valid_solution(problem, r_bfs)
+        self.assert_valid_solution(problem, r_dfs)
+        self.assertEqual(r_bfs.steps, 2)
+        self.assertEqual(r_dfs.steps, 8)
+        
 if __name__ == "__main__":
     unittest.main()
