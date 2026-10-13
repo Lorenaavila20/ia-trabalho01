@@ -1,28 +1,30 @@
+"""Módulo para o problema das 8 Rainhas."""
+from collections.abc import Iterator
 from random import Random
-from typing import Iterable, List, Tuple
+from typing import List, Tuple
 
 Board = List[int]
-Move = Tuple[int, int]  # (coluna, nova_linha)
+Move = Tuple[int, int]
 N = 8
 
-
 def initial_board(rng: Random) -> Board:
-    """Geração padronizada: uma rainha aleatória por coluna."""
     return [rng.randrange(N) for _ in range(N)]
 
+def conflicts(board: list[int]) -> int:
+    c = 0
+    n = len(board)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if board[i] == board[j] or abs(board[i] - board[j]) == j - i:
+                c += 1
+    return c
 
-def conflicts(board: Board) -> int:
-    """Retorne o número de pares não ordenados de rainhas que se atacam."""
-    raise NotImplementedError("Implemente conflicts().")
-
-
-def moves(board: Board) -> Iterable[Move]:
-    """
-    Gere a vizinhança na ordem obrigatória:
-    coluna 0..7; dentro de cada coluna, linha 0..7, exceto a linha atual.
-    """
-    raise NotImplementedError("Implemente moves().")
-
+def moves(board: list[int]) -> Iterator[tuple[int, int]]:
+    for col in range(len(board)):
+        current_row = board[col]
+        for row in range(8):
+            if row != current_row:
+                yield (col, row)
 
 def apply_move(board: Board, move: Move) -> Board:
     col, row = move
@@ -31,7 +33,6 @@ def apply_move(board: Board, move: Move) -> Board:
     new_board = board.copy()
     new_board[col] = row
     return new_board
-
 
 def render(board: Board) -> str:
     rows = []
