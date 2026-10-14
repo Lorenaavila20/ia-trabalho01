@@ -12,6 +12,9 @@
 | Orientação sobre Git e ambiente virtual (comandos) | Repositório | Executei e conferi `git status` e o resultado |
 | Rascunho do `README.md` e deste arquivo | `README.md`, `IA_USAGE.md` | Revisei e ajustei ao que realmente fiz |
 
+| Revisão do `conflicts`, `moves`, `hill_climbing` e `random_restart` e casos de teste das 8 rainhas | `src/eight_queens.py`, `src/hill_climbing.py`, `tests/test_queens.py` | Executei os testes, comparei com contas à mão e rodei as 100 sementes |
+| Revisão crítica do relatório (números, erros factuais, respostas às 11 questões) | `modelo_relatorio/relatorio_sbc.tex` | Conferi cada afirmação com a saída de `scripts/run_experiments.py` |
+
 ## Outras ferramentas
 
 Nenhuma.

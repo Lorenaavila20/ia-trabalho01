@@ -1,0 +1,179 @@
+\documentclass[12pt]{article}
+
+% Modelo de relatório do Trabalho 01, baseado no template de conferências da
+% Sociedade Brasileira de Computação (SBC), versão atualizada em 2017.
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+
+\sloppy
+\renewcommand{\tablename}{Tabela}
+\renewcommand{\figurename}{Figura}
+\renewcommand{\refname}{Referências}
+
+\title{Trabalho 01 - Busca Não Informada, Busca Informada e Busca Local}
+
+\author{Lorena Ávila de Souza Silva\inst{1}}
+
+\address{Curso de Engenharia de Computação - CEFET-MG, campus Divinópolis\\
+Disciplina de Inteligência Artificial - 2026/2
+\email{lorenaavila15@outlook.com}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This report presents the implementation and experimental analysis of uninformed, informed, and local search algorithms developed for Assignment 01. The experiments compare BFS, DFS, Uniform-Cost Search, Greedy Best-First Search, and A* in a weighted grid, and Hill Climbing and Random-Restart Hill Climbing in the 8-Queens problem. Quantitative results show that A* with Manhattan reduced expansions from 74 (UCS) to 43 while preserving the optimal cost of 29, whereas Hill Climbing achieved a 12\% success rate compared to 100\% for Random-Restart \cite{russell2021}.
+\end{abstract}
+
+\begin{resumo}
+Este relatório apresenta a implementação e a análise experimental dos algoritmos de busca desenvolvidos no Trabalho 01. Os experimentos comparam BFS, DFS, Busca de Custo Uniforme, Busca Gulosa e A* em um ambiente ponderado, além de Hill Climbing e Random-Restart Hill Climbing no problema das 8 rainhas. Os resultados quantitativos mostram que o A* com Manhattan reduziu as expansões de 74 (UCS) para 43 mantendo o custo ótimo de 29, enquanto o Hill Climbing obteve 12\% de sucesso frente aos 100\% do Random-Restart.
+\end{resumo}
+
+\section{Introdução}
+O presente trabalho aborda a modelagem e a resolução de problemas clássicos de Inteligência Artificial divididos em duas frentes: a busca em ambientes ponderados em grade e a otimização local aplicada ao problema das 8 rainhas. O objetivo principal é comparar o comportamento prático de diferentes estratégias de busca frente a métricas rigorosas de desempenho, como número de passos, custo acumulado, nós gerados e expandidos, picos de memória e tempo de execução.
+
+A análise busca responder a questões fundamentais sobre a divergência entre menor número de passos e menor custo real, o impacto da escolha da heurística na eficiência do A* e da Busca Gulosa, e as limitações de ótimos locais enfrentadas pelo Hill Climbing puro em contraste com o sucesso do Random Restart.
+
+\section{Representação e implementação}
+\subsection{Parte 1 - Busca não informada e informada}
+A representação do ambiente consiste numa grade ponderada onde cada célula possui um custo associado de transição. As buscas (BFS, DFS, UCS, Gulosa e A*) utilizam estruturas de dados nativas: \texttt{deque} para a fila da BFS, pilhas em listas para a DFS, e filas de prioridade (\texttt{heapq}) para UCS, Gulosa e A*, garantindo desempates determinísticos baseados em contadores de inserção. 
+
+O rastreamento de estados descobertos foi implementado no momento da inserção na fronteira (para BFS e DFS, evitando loops em grafos finitos com ciclos) e por meio de dicionários de melhor custo conhecido (\texttt{cost\_so\_far} / \texttt{g\_score}) para UCS e A*, permitindo o descarte de entradas obsoletas. Na Busca Gulosa, cada estado entra na fronteira uma única vez, enquanto UCS e A* reinserem quando o custo melhora. O teste de objetivo é feito estritamente ao retirar da fronteira (o objetivo não conta como expandido), e a reconstrução do caminho utiliza um dicionário de pais (\texttt{parent}).
+
+\subsection{Heurísticas}
+As heurísticas utilizadas foram as distâncias de Manhattan e Euclidiana. Elas são admissíveis porque cada movimento ortogonal muda a distância Manhattan em exatamente 1 e custa pelo menos 1, enquanto obstáculos e terrenos caros apenas aumentam o custo real de travessia. Logo, o custo real restante é sempre $\ge$ Manhattan $\ge$ Euclidiana, sendo a Manhattan uma estimativa mais próxima e informativa do custo real em grades ortogonais.
+
+\subsection{Problema das 8 rainhas}
+O problema modela o tabuleiro como um vetor de 8 inteiros, onde o índice é a coluna e o valor é a linha (gerado com \texttt{randrange(8)} por coluna). A função de avaliação $h(s)$ calcula o número de pares em conflito. A vizinhança de tamanho 56 explora todas as colunas e linhas alternativas. O Hill Climbing avalia os 56 vizinhos, escolhe o primeiro entre os de menor $h$ e só aceita o movimento se houver melhora estrita ($h_{novo} < h_{atual}$), sem aceitar movimentos laterais. O Random Restart utiliza \texttt{random.Random} para reinicializar o tabuleiro até 50 vezes em caso de falha.
+
+\section{Metodologia experimental}
+Os experimentos foram executados em ambiente Linux (Ubuntu) utilizando Python 3.12.3, sem dependências externas além das bibliotecas padrão. O mapa utilizado foi o \texttt{data/mapa\_teste.txt}. Os comandos de reprodução são \texttt{python3 -m scripts.run\_experiments} e \texttt{python3 -m unittest discover -s tests -v}. As métricas de tempo foram obtidas isolando a leitura do arquivo e calculando a mediana de 30 execuções independentes via \texttt{time.perf\_counter()}, servindo como métrica secundária e sujeita a variações entre rodadas.
+
+Para a Parte 2, executou-se o Hill Climbing e o Random Restart sobre 100 sementes (0 a 99). Cada movimento aceito conta como uma iteração; a contagem de estados avaliados inclui o estado inicial e todas as avaliações de vizinhos (incluindo a varredura final sem melhora); e no Random Restart, \textit{restarts} representa o número de tentativas menos 1.
+
+\noindent\textbf{Repositório:} \url{https://github.com/Lorenaavila20/ia-trabalho01} \\
+\textbf{Tag da entrega final:} \texttt{entrega-final}.
+
+\section{Resultados}
+\subsection{Parte 1 - Busca não informada e informada}
+A Tabela~\ref{tab:grid} consolida os resultados obtidos no mapa de teste público.
+
+\begin{table}[H]
+\centering
+\caption{Resultados dos algoritmos de busca no mapa de teste.}
+\label{tab:grid}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrrr}
+\toprule
+Algoritmo & Heurística & Passos & Custo & Gerados & Expandidos & Pico fronteira & Memória & Tempo (ms) \\
+\midrule
+BFS     & -          & 15 & 40 & 66 & 59 & 9  & 66 & 0.088 \\
+DFS     & -          & 15 & 40 & 21 & 15 & 6  & 21 & 0.029 \\
+UCS     & -          & 29 & 29 & 77 & 74 & 6  & 77 & 0.151 \\
+Gulosa  & Manhattan  & 15 & 40 & 21 & 15 & 6  & 21 & 0.034 \\
+Gulosa  & Euclidiana & 15 & 40 & 21 & 15 & 6  & 21 & 0.032 \\
+A*      & Manhattan  & 29 & 29 & 60 & 43 & 15 & 58 & 0.109 \\
+A*      & Euclidiana & 29 & 29 & 72 & 60 & 12 & 72 & 0.134 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+A Figura~\ref{fig:caminhos} ilustra visualmente os caminhos encontrados pelos algoritmos (sendo que DFS e Busca Gulosa produziram o mesmo caminho da BFS neste mapa).
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.48\textwidth}\scriptsize\begin{verbatim}
+S**************G
+.#.#####.####...
+.#.....#....#...
+.#####.#.##.#...
+.....#.#....#...
+####.#.######...
+.....#...R.R....
+................
+\end{verbatim}
+\centering BFS, DFS e Gulosa: 15 passos, custo 40
+\end{minipage}
+\begin{minipage}{0.48\textwidth}\scriptsize\begin{verbatim}
+S**MMMMM.....**G
+.#*#####.####*..
+.#*****#....#*..
+.#####*#.##.#*..
+.....#*#....#*..
+####.#*######*..
+.....#***R.R**..
+........*****...
+\end{verbatim}
+\centering UCS e A* (Manhattan): 29 passos, custo 29
+\end{minipage}
+\caption{Caminhos encontrados pelos algoritmos no mapa público.}
+\label{fig:caminhos}
+\end{figure}
+
+O A* com Euclidiana também encontrou custo 29, em 29 passos, mas por uma rota diferente nos últimos passos (passa pela célula $(1,14)$ em vez de $(0,13)$): há mais de um caminho ótimo, e os critérios de desempate decidem qual deles é retornado.
+
+\subsection{Parte 2 - Busca local e 8 rainhas}
+A Tabela~\ref{tab:queens} resume os experimentos realizados com as 100 sementes (0 a 99).
+
+\begin{table}[H]
+\centering
+\caption{Resultados dos métodos de busca local no problema das 8 rainhas.}
+\label{tab:queens}
+\begin{tabularx}{\textwidth}{Xrr}
+\toprule
+Métrica & Hill Climbing & Random Restart \\
+\midrule
+Execuções & 100 & 100 \\
+Soluções encontradas & 12 & 100 \\
+Taxa de sucesso (\%) & 12\% & 100\% \\
+Média de iterações & 3.28 & 24.72 \\
+Mediana de iterações & 3.0 & 17.5 \\
+Média de estados avaliados & 240.68 & 1826.64 \\
+Média de reinícios & N/A & 6.76 \\
+Máximo de reinícios & N/A & 42 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A primeira falha do HC, na seed 0, teve estado inicial \texttt{[6, 6, 0, 4, 7, 6, 4, 7]} ($h = 9$). A trajetória de $h$ foi $[9, 6, 4, 3, 2]$, estagnando num mínimo local com $h = 2$ (tabuleiro final \texttt{[6, 3, 5, 2, 1, 6, 4, 7]}). Nesse estado final, os conflitos restantes são um par na mesma linha (colunas 0 e 5) e um par na diagonal (colunas 3 e 4); dos 56 vizinhos, 0 melhoravam, 3 empatavam e 53 pioravam, e nenhum movimento lateral único levou a uma melhora.
+
+\section{Discussão}
+A análise abaixo responde de forma estruturada às questões centrais propostas \cite{russell2021}:
+\begin{itemize}
+    \item \textbf{Q1 e Q2 (Diferença entre número de ações e custo / Comportamento de BFS, DFS e UCS):} A BFS encontra o menor caminho em número de ações (15 passos na Tabela~\ref{tab:grid}), mas não em custo (40), pois expande nós por nível sem ponderar os custos das células. A UCS garante o custo ótimo (29) por expandir nós em ordem crescente de custo acumulado, ainda que exiba maior esforço (74 nós expandidos).
+    \item \textbf{Q3 (Ordem de expansão da DFS):} A DFS encontrou uma solução de 15 passos e custo 40 porque os sucessores são empilhados em ordem inversa na pilha, fazendo com que o Norte saia primeiro, e o Leste seja expandido antes do Sul. O objetivo está a leste do início e a DFS seguiu a linha 0. Conforme demonstrado no mapa pequeno do arquivo de testes (\texttt{tests/test\_search.py}, no teste de comparação onde a BFS dá 2 passos e a DFS dá 8), evidencia-se fortemente a influência da ordem de expansão sobre o caminho percorrido.
+    \item \textbf{Q4 (Desempenho da Busca Gulosa):} A Busca Gulosa foi rápida (15 expansões, 21 gerados), mas gerou custo subótimo (40). O custo subiu porque, a partir de S, avaliando com Manhattan, o vizinho a leste tem $h = 14$ e o do sul tem $h = 16$, fazendo com que a Gulosa siga rigidamente pela linha 0, mesmo sobre terrenos de alto custo (os cinco M, acumulando 30 dos 40 pontos de custo).
+    \item \textbf{Q5 e Q6 (Comparação UCS vs A* e heurísticas):} O A* com Manhattan reduziu as expansões de 74 (UCS) para 43, mantendo o custo ótimo de 29. Na Busca Gulosa, a troca de heurística entre Manhattan e Euclidiana não alterou as métricas (mesmo caminho, 21 gerados, 15 expandidos, custo 40). Já no A*, a troca elevou as expansões de 43 (Manhattan) para 60 (Euclidiana), pois a Euclidiana fornece estimativas menores, logo menos informativas.
+    \item \textbf{Q7 (Admissibilidade):} Ambas as heurísticas são admissíveis porque cada movimento ortogonal muda a distância Manhattan em exatamente 1 e custa pelo menos 1, enquanto obstáculos e terrenos caros apenas aumentam o custo real. Logo, custo real $\ge$ Manhattan $\ge$ Euclidiana.
+    \item \textbf{Q8 (Busca Gulosa vs Hill Climbing):} A Busca Gulosa escolhe o melhor nó de toda a fronteira e guarda os nós já explorados, podendo retomar ramos alternativos. O Hill Climbing guarda apenas o estado atual, sem lembrar alternativas ou gerar um caminho, resultando unicamente na configuração final atingida.
+    \item \textbf{Q9 (Paisagem de busca local e seed 0):} Na seed 0, o Hill Climbing iniciou com $h = 9$, seguiu a trajetória $[9, 6, 4, 3, 2]$ em 4 iterações e avaliou 281 estados até estagnar num mínimo local com $h = 2$, onde 0 vizinhos eram melhores, 3 empatavam e 53 pioravam.
+    \item \textbf{Q10 (Eficácia do Random Restart):} Com uma taxa de sucesso estimada em 12\% por tentativa, a probabilidade teórica de falha em 51 tentativas independentes é de $(1 - 0.12)^{51} \approx 0.15\%$. O número esperado de reinícios é $1/0.12 - 1 \approx 7.3$ (observou-se 6.76 em média). Contudo, os reinícios não eliminam a limitação de que cada tentativa continua sendo um Hill Climbing vulnerável a mínimos locais (88\% de chance de falhar por tentativa); a garantia é apenas probabilística e limitada pelo teto de 50 reinícios (sendo que o máximo observado foi 42).
+    \item \textbf{Q11 (Completude e optimalidade):} Nas condições deste trabalho (grade finita com controle de estados descobertos na inserção): a BFS é completa e ótima apenas em número de ações (custo 40); a UCS é completa e ótima em custo (custo 29, pois todos os custos $\ge 1$); o A* é completo e ótimo por usar heurística admissível (custos 29 com 43 e 60 expansões); a DFS e a Gulosa são completas por marcarem os visitados (evitando loops), mas não são ótimas (custo 40); e o Hill Climbing é incompleto, enquanto o Random Restart possui apenas completude probabilística limitada pelo teto de reinícios, alcançando 100\% de sucesso empírico nos testes.
+\end{itemize}
+
+\section{Conclusão}
+O trabalho permitiu consolidar a compreensão prática entre buscas cegas, informadas e locais. O A* com Manhattan atingiu 43 expansões contra 74 da UCS, com o mesmo custo e menos expansões neste mapa. Já o Hill Climbing puro obteve 12\% de sucesso, enquanto o Random Restart alcançou 100\% de sucesso, confirmando a eficácia e os limites das abordagens locais neste cenário.
+
+\section*{Contribuições dos autores}
+A autora implementou e testou os algoritmos, executou os experimentos e redigiu o relatório.
+
+\section*{Declaração de uso de IA}
+Foi utilizado o Claude (Anthropic), via chat, como apoio para planejamento e esclarecimento do enunciado, explicação em linguagem natural da lógica dos algoritmos, criação de casos de teste, revisão do código, estrutura do script de experimentos e revisão crítica do relatório. Algumas formulações da Discussão foram revisadas e aprimoradas a partir de sugestões do Claude; todos os resultados, contas e conclusões foram verificados criticamente pela autora. Os detalhes estão em \texttt{IA\_USAGE.md}.
+
+\begin{thebibliography}{99}
+
+\bibitem[Russell and Norvig 2021]{russell2021}
+Russell, S. and Norvig, P. (2021). \textit{Artificial Intelligence: A Modern Approach}. Pearson, 4th edition.
+
+\end{thebibliography}
+
+\end{document}
